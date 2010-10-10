@@ -18,8 +18,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'SmartBogus'
       
       def authorize(money, creditcard, options = {})
-        money = amount(money)
         if creditcard.is_a?(String) || creditcard.is_a?(Integer)
+          money = amount(money)
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         else
           super(money, creditcard, options)
@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
   
       def purchase(money, creditcard, options = {})
         if creditcard.is_a?(String) || creditcard.is_a?(Integer)
+          money = amount(money)
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         else
           super(money, creditcard, options)
