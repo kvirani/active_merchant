@@ -1,5 +1,7 @@
 = Active Merchant
 
+NOTE: This fork simply adds a SmartBogusGateway which inherits from BogusGateway but allows for vaultID for purchase and auth methods.
+
 This library is supposed to aid in creating e-commerce software in Ruby.
 In the future we want to support all "good" payment gateways.
 
