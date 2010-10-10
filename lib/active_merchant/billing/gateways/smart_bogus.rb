@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         if creditcard.is_a?(String) || creditcard.is_a?(Integer)
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         else
-          super
+          super(money, creditcard, options)
         end
       end
   
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
         if creditcard.is_a?(String) || creditcard.is_a?(Integer)
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         else
-          super
+          super(money, creditcard, options)
         end
       end
  
