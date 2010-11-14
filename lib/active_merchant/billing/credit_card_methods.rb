@@ -92,6 +92,10 @@ module ActiveMerchant #:nodoc:
           "XXXX-XXXX-XXXX-#{last_digits(number)}"
         end
         
+        def bin(number)
+          number.to_s.length <= 6 ? number : number.to_s.slice(0..5) 
+        end
+        
         # Checks to see if the calculated type matches the specified type
         def matching_type?(number, type)
           type?(number) == type

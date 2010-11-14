@@ -91,6 +91,10 @@ module ActiveMerchant #:nodoc:
         self.class.last_digits(number)
       end
       
+      def bin_number
+        self.class.bin(number)
+      end
+      
       def validate
         validate_essential_attributes
 
