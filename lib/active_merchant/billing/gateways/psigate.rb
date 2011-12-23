@@ -76,6 +76,11 @@ module ActiveMerchant #:nodoc:
         commit(money, nil, options)
       end
       
+      # Psigate Void (kvirani)
+      def void(authorization, transaction_ref_number, options = {})
+        options.update({ :CardAction => "9", :order_id => authorization, :trans_ref_number => transaction_ref_number })
+        commit(nil, nil, options)
+      end
 
       # Psigate Credit
       def credit(money, authorization, options = {})
@@ -143,11 +148,11 @@ module ActiveMerchant #:nodoc:
           :Phone => options[:phone],
           :Fax => options[:fax],
           :Email => options[:email],
-          
+
           # Credit Card paramaters
           :PaymentType => "CC",
           :CardAction => options[:CardAction],
-          
+
           # Financial paramters
           :CustomerIP => options[:ip],
           :SubTotal => amount(money),
@@ -155,6 +160,8 @@ module ActiveMerchant #:nodoc:
           :Tax2 => options[:tax2],
           :ShippingTotal => options[:shipping_total],
         }
+
+        params.merge!({ :TransRefNumber => options[:trans_ref_number] }) unless options[:trans_ref_number].blank?
 
         if creditcard
           exp_month = sprintf("%.2i", creditcard.month) unless creditcard.month.blank?
@@ -169,7 +176,7 @@ module ActiveMerchant #:nodoc:
             :CardIDNumber => creditcard.verification_value
           )
         end
-        
+
         if address = options[:billing_address] || options[:address]           
           params[:Bname] = address[:name] || creditcard.name 
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
@@ -180,7 +187,7 @@ module ActiveMerchant #:nodoc:
           params[:Bcountry]     = address[:country]  unless address[:country].blank?
           params[:Bcompany]     = address[:company]  unless address[:company].blank?
         end
-        
+
         if address = options[:shipping_address]
           params[:Sname]        = address[:name] || creditcard.name 
           params[:Saddress1]    = address[:address1] unless address[:address1].blank?
@@ -191,7 +198,7 @@ module ActiveMerchant #:nodoc:
           params[:Scountry]     = address[:country]  unless address[:country].blank?
           params[:Scompany]     = address[:company]  unless address[:company].blank?
         end
-       	 	
+
         return params
       end
       

@@ -433,6 +433,11 @@ module ActiveMerchant #:nodoc:
         request = build_request(:validate_customer_payment_profile, options)
         commit(:validate_customer_payment_profile, request)
       end
+      
+      # kvirani
+      def test?
+        @options[:test] || Base.gateway_mode == :test || super
+      end
 
       private
 
@@ -553,13 +558,13 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      # Use options[:test] instead of @options[:test]
       def build_create_customer_profile_transaction_request(xml, options)
         add_transaction(xml, options[:transaction])
-        xml.tag!('extraOptions', "x_test_request=TRUE") if @options[:test]
-        
+        xml.tag!('extraOptions', "x_test_request=TRUE") if options[:test] 
         xml.target!
       end
-      
+                  
       def build_validate_customer_payment_profile_request(xml, options)
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
