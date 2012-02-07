@@ -35,13 +35,20 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # To create a charge on a card or a token, call
+      #
+      #   purchase(money, card_hash_or_token, { ... })
+      #
+      # To create a charge on a customer, call
+      #
+      #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
         post = {}
 
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
         add_customer(post, options)
-        add_customer_data(post, options)
+        post[:description] = options[:description] || options[:email]
         add_flags(post, options)
 
         raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
@@ -50,14 +57,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        purchase(money, creditcard, options.merge(:uncaptured => true))
+        raise "Stripe does not support separate authorization and capture"
       end
 
       def capture(money, identification, options = {})
-        commit("charges/#{CGI.escape(identification)}/capture", {})
+        raise "Stripe does not support separate authorization and capture"
       end
 
-      def void(identification, options={})
+      def void(identification, options = {})
         commit("charges/#{CGI.escape(identification)}/refund", {})
       end
 
@@ -69,16 +76,26 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(identification)}/refund", post)
       end
 
-      def store(creditcard, options={})
+      def store(creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard, options)
-        add_customer_data(post, options)
+        post[:description] = options[:description]
+        post[:email] = options[:email]
 
         if options[:customer]
           commit("customers/#{CGI.escape(options[:customer])}", post)
         else
           commit('customers', post)
         end
+      end
+
+      def update(customer_id, creditcard, options = {})
+        options = options.merge(:customer => customer_id)
+        store(creditcard, options)
+      end
+
+      def unstore(customer_id, options = {})
+        commit("customers/#{CGI.escape(customer_id)}", nil, :delete)
       end
 
       private
@@ -89,7 +106,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:description] = options[:email] || options[:description]
+        post[:description] = options[:description]
+        post[:email] = options[:email]
       end
 
       def add_address(post, options)
@@ -132,6 +150,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(params)
+        return nil unless params
+
         params.map do |key, value|
           next if value.blank?
           if value.is_a?(Hash)
@@ -177,7 +197,7 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        card = response["card"] || {}
+        card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
         Response.new(success,
