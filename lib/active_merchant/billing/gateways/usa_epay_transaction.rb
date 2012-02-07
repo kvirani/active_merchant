@@ -3,7 +3,8 @@ module ActiveMerchant #:nodoc:
 
     class UsaEpayTransactionGateway < Gateway
     	URL = 'https://www.usaepay.com/gate.php'
-
+      TEST_URL = 'https://sandbox.usaepay.com/gate.php'
+      
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.usaepay.com/'
@@ -169,7 +170,8 @@ module ActiveMerchant #:nodoc:
 
 
       def commit(action, parameters)
-        response = parse( ssl_post(URL, post_data(action, parameters)) )
+        url = @options[:server] == :sandbox ? TEST_URL : URL
+        response = parse( ssl_post(url, post_data(action, parameters)) )
 
         Response.new(response[:status] == 'Approved', message_from(response), response,
           :test => @options[:test] || test?,
