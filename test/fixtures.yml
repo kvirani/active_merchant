@@ -10,6 +10,11 @@
 #
 # Paste any required PEM certificates after the pem key.  
 #
+gpn_global:
+  login: X
+  password: Y
+  key: Z
+
 authorize_net:
   login: X
   password: Y
