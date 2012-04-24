@@ -299,7 +299,7 @@ module ActiveMerchant #:nodoc:
       
       def get_phone_number(phone)
         phone = phone.to_s.gsub(/\D/, '')
-        phone = phone[1..-1] if phone.starts_with? '1'
+        phone = phone[1..-1] if phone[0] == '1'
         
         if phone
           phone = {
