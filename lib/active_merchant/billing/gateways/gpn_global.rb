@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         parameters[:amount] = amount(money)
-
+        
         url = test? ? TEST_URL : LIVE_URL
         data = ssl_post url, post_data(action, parameters)
 
@@ -177,6 +177,14 @@ module ActiveMerchant #:nodoc:
           xml.tag!("apiUser", @options[:login])
           xml.tag!("apiPassword", @options[:password])
           xml.tag!("apiCmd", action)
+          
+          # Special request from GPN guys to include this tag (in prod only) - crazy ??? - KV
+          if action == 700 && !test?
+            xml.tag!("auth") do
+              xml.tag!("type", "Auth")
+            end
+          end
+          
           build_transaction(xml, parameters) if parameters[:transaction]
           build_customer(xml, parameters) if parameters[:customer]
           build_creditcard(xml, parameters) if parameters[:creditcard]
