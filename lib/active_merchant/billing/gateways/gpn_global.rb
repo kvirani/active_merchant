@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         commit('capture', money, post)
       end
+      
+      def test?
+        @options[:test] || Base.gateway_mode == :test || super
+      end
     
       private                       
       
@@ -143,7 +147,7 @@ module ActiveMerchant #:nodoc:
           response = parse_element(root).with_indifferent_access
         end
 
-        response[:transaction_id] = response.delete :gp_ntransid # rename weird key name
+        response[:transaction_id] = response.delete :gp_ntransid # rename weird key name (FIXME: don't need to do this anymore I don't think - KV)
         response
       end
       
@@ -154,13 +158,9 @@ module ActiveMerchant #:nodoc:
         data = ssl_post url, post_data(action, parameters)
 
         response = parse(data)
-        #raise response.inspect
         
         message = message_from(response)
 
-        puts "response::"
-        puts response.inspect
-        
         Response.new(success?(response), message, response, 
           :test => test?, 
           :authorization => response[:transref], # transaction_id is nil
