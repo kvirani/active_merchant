@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
           :city      => a[:city],
           :address1  => a[:address1],
           :address2  => nil,
-          :stateregioniso => iso_code_for(a[:state]),
+          :stateregioniso => a[:state],
           :countryiso => iso_code_for(a[:country]),
           
           :phone1phone => phone[:number],
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
           :billingcity      => options[:city],
           :billingaddress1  => options[:address1],
           :billingaddress2  => nil,
-          :billingstateregioniso => iso_code_for(options[:state]),
+          :billingstateregioniso => options[:state],
           :billingcountryiso => iso_code_for(options[:country]),
           :billingphone1phone => phone[:number],
           :billingphone1country => phone[:country],
@@ -158,6 +158,7 @@ module ActiveMerchant #:nodoc:
         data = ssl_post url, post_data(action, parameters)
 
         response = parse(data)
+      
         
         message = message_from(response)
 
@@ -190,6 +191,9 @@ module ActiveMerchant #:nodoc:
           build_creditcard(xml, parameters) if parameters[:creditcard]
           xml.tag!("checksum", generate_checksum(action, parameters))
         end
+        
+        #puts "xml: "
+        #puts xml.target!
         
         request = "strrequest=#{CGI.escape(xml.target!)}"
 
@@ -294,8 +298,10 @@ module ActiveMerchant #:nodoc:
       end
       
       def get_phone_number(phone)
-        phone = phone.to_s.gsub(/\D/, '')[1..-1]
-        if phone 
+        phone = phone.to_s.gsub(/\D/, '')
+        phone = phone[1..-1] if phone.starts_with? '1'
+        
+        if phone
           phone = {
             :number => phone.last(7),
             :area => phone.first(3),
