@@ -17,35 +17,35 @@ module ActiveMerchant #:nodoc:
     #	you will use your Merchant ID as the login and GatewayPassword
     #	as the password.
     # 
-   
+
     class RocketgateGateway < Gateway
-     
-    #
-    #	Override superclass attributes that describe processing
-    #	preferences and defaults.
-    #
+
+      #
+      #	Override superclass attributes that describe processing
+      #	preferences and defaults.
+      #
       self.money_format = :dollars
-      self.supported_countries = ['US']		# US for now
+      self.supported_countries = ['US'] # US for now
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :switch, :solo, :maestro]
       self.homepage_url = 'http://www.rocketgate.com/'
       self.display_name = 'RocketGate'
-      
-    #
-    #	Map gateway response codes to human readable errors.
-    #
+
+      #
+      #	Map gateway response codes to human readable errors.
+      #
       @@response_codes = {
-        :r0   => "Transaction Successful",
+        :r0 => "Transaction Successful",
         :r100 => 'No matching transaction',
         :r101 => 'A void operation cannot be performed because the original transaction has already been voided, credited, or settled.',
         :r102 => 'A credit operation cannot be performed because the original transaction has already been voided, credited, or has not been settled.',
-        :r103 =>'A ticket operation cannot be performed because the original auth-only transaction has been voided or ticketed.',
+        :r103 => 'A ticket operation cannot be performed because the original auth-only transaction has been voided or ticketed.',
         :r104 => 'The bank has declined the transaction.',
         :r105 => 'The bank has declined the transaction because the account is over limit.',
         :r106 => 'The transaction was declined because the security code (CVV) supplied was invalid.',
         :r107 => 'The bank has declined the transaction because the card is expired.',
-        :r108 =>'The bank has declined the transaction and has requested that the merchant call.',
-        :r109 =>'The bank has declined the transaction and has requested that the merchant pickup the card.',
-        :r110 =>'The bank has declined the transaction due to excessive use of the card.',
+        :r108 => 'The bank has declined the transaction and has requested that the merchant call.',
+        :r109 => 'The bank has declined the transaction and has requested that the merchant pickup the card.',
+        :r110 => 'The bank has declined the transaction due to excessive use of the card.',
         :r111 => 'The bank has indicated that the account is invalid.',
         :r112 => 'The bank has indicated that the account is expired.',
         :r113 => 'The issuing bank is temporarily unavailable. May be tried again later.',
@@ -54,8 +54,8 @@ module ActiveMerchant #:nodoc:
         :r151 => 'The transaction was declined because the security code (CVV) supplied was invalid.',
         :r152 => 'The TICKET request was for an invalid amount. Please verify the TICKET for less then the AUTH_ONLY.',
         :r154 => 'The transaction was declined because of missing or invalid data.',
-        :r200 => 'Transaction was declined', 	# Risk Fail
-        :r201 => 'Transaction was declined',	# Customer blocked
+        :r200 => 'Transaction was declined', # Risk Fail
+        :r201 => 'Transaction was declined', # Customer blocked
         :r300 => 'A DNS failure has prevented the merchant application from resolving gateway host names.',
         :r301 => 'The merchant application is unable to connect to an appropriate host.',
         :r302 => 'Transmit error, no payment has occured.',
@@ -104,10 +104,10 @@ module ActiveMerchant #:nodoc:
 #  
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options			# Save the option list
-        super					# Execute super class
-      end  
-     
+        @options = options # Save the option list
+        super # Execute super class
+      end
+
 
 ######################################################################
 #
@@ -116,31 +116,31 @@ module ActiveMerchant #:nodoc:
 ######################################################################
 # 
       def authorize(money, creditcard, options = {})
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	add_customer_data(request, options)	# Add customer information
-	add_invoice_data(request, money, options)
-	add_creditcard(request, creditcard)	# Add credit card data
-	add_address(request, options[:billing_address])
-	add_business_rules_data(request, options)
+        add_merchant_data(request, options) # Add merchant information
+        add_customer_data(request, options) # Add customer information
+        add_invoice_data(request, money, options)
+        add_creditcard(request, creditcard) # Add credit card data
+        add_address(request, options[:billing_address])
+        add_business_rules_data(request, options)
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformAuthOnly(request, response)
-	return create_response(response)
+        service.PerformAuthOnly(request, response)
+        return create_response(response)
       end
 
-      
+
 ######################################################################
 #
 #	purchase() - Perform an auth-capture transaction.
@@ -148,31 +148,31 @@ module ActiveMerchant #:nodoc:
 ######################################################################
 # 
       def purchase(money, creditcard, options = {})
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	add_customer_data(request, options)	# Add customer information
-	add_invoice_data(request, money, options)
-	add_creditcard(request, creditcard)	# Add credit card data
-	add_address(request, options[:billing_address])
-	add_business_rules_data(request, options)
+        add_merchant_data(request, options) # Add merchant information
+        add_customer_data(request, options) # Add customer information
+        add_invoice_data(request, money, options)
+        add_creditcard(request, creditcard) # Add credit card data
+        add_address(request, options[:billing_address])
+        add_business_rules_data(request, options)
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformPurchase(request, response)
-	return create_response(response)
-      end                       
+        service.PerformPurchase(request, response)
+        return create_response(response)
+      end
 
-   
+
 ######################################################################
 #
 #	capture() - Perform a ticket of previous auth-only.
@@ -180,25 +180,25 @@ module ActiveMerchant #:nodoc:
 ######################################################################
 # 
       def capture(money, authorization, options = {})
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	add_financial_data(request, money, options)
-	request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
+        add_merchant_data(request, options) # Add merchant information
+        add_financial_data(request, money, options)
+        request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformTicket(request, response)
-	return create_response(response)
+        service.PerformTicket(request, response)
+        return create_response(response)
       end
 
 
@@ -214,25 +214,25 @@ module ActiveMerchant #:nodoc:
 ######################################################################
 # 
       def void(authorization, options = {})
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
-	request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
+        add_merchant_data(request, options) # Add merchant information
+        request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
+        request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformVoid(request, response)
-	return create_response(response)
+        service.PerformVoid(request, response)
+        return create_response(response)
       end
 
 
@@ -247,29 +247,29 @@ module ActiveMerchant #:nodoc:
 ######################################################################
 # 
       def credit(money, authorization, options = {})
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	add_financial_data(request, money, options)
-	request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
-	request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
+        add_merchant_data(request, options) # Add merchant information
+        add_financial_data(request, money, options)
+        request.Set(RocketGate::GatewayRequest::TRANSACT_ID, authorization)
+        request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformCredit(request, response)
-	return create_response(response)
+        service.PerformCredit(request, response)
+        return create_response(response)
       end
 
- 
+
 ######################################################################
 #
 #	recurring() - Setup a recurring payment.
@@ -279,30 +279,34 @@ module ActiveMerchant #:nodoc:
       def recurring(money, creditcard, options = {})
         requires!(options, :rebill_frequency)
 
-	request = RocketGate::GatewayRequest.new
-	response = RocketGate::GatewayResponse.new
-	service = RocketGate::GatewayService.new
-	if test?				# Test transaction?
-	  service.SetTestMode(true)		# Set internal test mode
-	end
+        request = RocketGate::GatewayRequest.new
+        response = RocketGate::GatewayResponse.new
+        service = RocketGate::GatewayService.new
+        if test? # Test transaction?
+          service.SetTestMode(true) # Set internal test mode
+        end
 
 #
 #	Add the details of the transaction to the request.
 #
-	add_merchant_data(request, options)	# Add merchant information
-	add_customer_data(request, options)	# Add customer information
-	add_invoice_data(request, money, options)
-	add_recurring_data(request, options)
-	add_creditcard(request, creditcard)	# Add credit card data
-	add_address(request, options[:billing_address])
-	add_business_rules_data(request, options)
+        add_merchant_data(request, options) # Add merchant information
+        add_customer_data(request, options) # Add customer information
+        add_invoice_data(request, money, options)
+        add_recurring_data(request, options)
+        add_creditcard(request, creditcard) # Add credit card data
+        add_address(request, options[:billing_address])
+        add_business_rules_data(request, options)
 
 #
 #	Peform the transaction and return a response.
 #
-	service.PerformPurchase(request, response)
-	return create_response(response)
-      end                       
+        service.PerformPurchase(request, response)
+        return create_response(response)
+      end
+
+      def test?
+        @options[:test] || Base.gateway_mode == :test || super
+      end
 
 
 ######################################################################
@@ -311,11 +315,11 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-      private                       		# These are private functions
-	def add_merchant_data(request, options)
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_ID, @options[:login])
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_PASSWORD, @options[:password])
-	end
+      private # These are private functions
+      def add_merchant_data(request, options)
+        request.Set(RocketGate::GatewayRequest::MERCHANT_ID, @options[:login])
+        request.Set(RocketGate::GatewayRequest::MERCHANT_PASSWORD, @options[:password])
+      end
 
 
 ######################################################################
@@ -324,11 +328,11 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_customer_data(request, options)
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_CUSTOMER_ID, options[:customer_id])
-	  request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
-	  request.Set(RocketGate::GatewayRequest::EMAIL, options[:email])
-	end
+      def add_customer_data(request, options)
+        request.Set(RocketGate::GatewayRequest::MERCHANT_CUSTOMER_ID, options[:customer_id])
+        request.Set(RocketGate::GatewayRequest::IPADDRESS, options[:ip])
+        request.Set(RocketGate::GatewayRequest::EMAIL, options[:email])
+      end
 
 
 ######################################################################
@@ -337,30 +341,30 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_invoice_data(request, money, options)
+      def add_invoice_data(request, money, options)
 
 #
 #	Start with the basic transaction amount.
 #
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_INVOICE_ID, options[:order_id])
-	  request.Set(RocketGate::GatewayRequest::AMOUNT, amount(money))
-	  request.Set(RocketGate::GatewayRequest::CURRENCY, options[:currency] || currency(money))
+        request.Set(RocketGate::GatewayRequest::MERCHANT_INVOICE_ID, options[:order_id])
+        request.Set(RocketGate::GatewayRequest::AMOUNT, amount(money))
+        request.Set(RocketGate::GatewayRequest::CURRENCY, options[:currency] || currency(money))
 
 #
 #	Add optional pass-through data.
 #
-	  request.Set(RocketGate::GatewayRequest::UDF01, options[:udf01])
-	  request.Set(RocketGate::GatewayRequest::UDF02, options[:udf02])
+        request.Set(RocketGate::GatewayRequest::UDF01, options[:udf01])
+        request.Set(RocketGate::GatewayRequest::UDF02, options[:udf02])
 
 #
 #	Add optional tracking data.
 #        
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_ACCOUNT, options[:merchant_account])
-	  request.Set(RocketGate::GatewayRequest::BILLING_TYPE, options[:billing_type])
-	  request.Set(RocketGate::GatewayRequest::AFFILIATE, options[:affiliate])
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_SITE_ID, options[:site_id])
-	  request.Set(RocketGate::GatewayRequest::MERCHANT_DESCRIPTOR, options[:descriptor])
-	end
+        request.Set(RocketGate::GatewayRequest::MERCHANT_ACCOUNT, options[:merchant_account])
+        request.Set(RocketGate::GatewayRequest::BILLING_TYPE, options[:billing_type])
+        request.Set(RocketGate::GatewayRequest::AFFILIATE, options[:affiliate])
+        request.Set(RocketGate::GatewayRequest::MERCHANT_SITE_ID, options[:site_id])
+        request.Set(RocketGate::GatewayRequest::MERCHANT_DESCRIPTOR, options[:descriptor])
+      end
 
 
 ######################################################################
@@ -370,33 +374,33 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_financial_data(request, money, options)
-	  request.Set(RocketGate::GatewayRequest::AMOUNT, amount(money))
-	  request.Set(RocketGate::GatewayRequest::CURRENCY, options[:currency] || currency(money))
-	end
+      def add_financial_data(request, money, options)
+        request.Set(RocketGate::GatewayRequest::AMOUNT, amount(money))
+        request.Set(RocketGate::GatewayRequest::CURRENCY, options[:currency] || currency(money))
+      end
 
- 
+
 ######################################################################
 #
 #	add_creditcard() - Add customer credit card data.
 #
 ######################################################################
 #
-	def add_creditcard(request, creditcard) 
-	  
-	  cardNo = creditcard.number
-	  cardNo.strip!
-	  if ((cardNo.length == 44) || (cardNo =~ /[A-Z]/i) || (cardNo =~ /\+/) || (cardNo =~ /\=/))
-	    request.Set(RocketGate::GatewayRequest::CARD_HASH, creditcard.number)
-	  else
-	    request.Set(RocketGate::GatewayRequest::CARDNO, creditcard.number)
-	    request.Set(RocketGate::GatewayRequest::CVV2, creditcard.verification_value)
-	    request.Set(RocketGate::GatewayRequest::EXPIRE_MONTH, creditcard.month)
-	    request.Set(RocketGate::GatewayRequest::EXPIRE_YEAR, creditcard.year)
-	    request.Set(RocketGate::GatewayRequest::CUSTOMER_FIRSTNAME, creditcard.first_name)
-	    request.Set(RocketGate::GatewayRequest::CUSTOMER_LASTNAME, creditcard.last_name)
-	  end
-	end
+      def add_creditcard(request, creditcard)
+
+        cardNo = creditcard.number
+        cardNo.strip!
+        if ((cardNo.length == 44) || (cardNo =~ /[A-Z]/i) || (cardNo =~ /\+/) || (cardNo =~ /\=/))
+          request.Set(RocketGate::GatewayRequest::CARD_HASH, creditcard.number)
+        else
+          request.Set(RocketGate::GatewayRequest::CARDNO, creditcard.number)
+          request.Set(RocketGate::GatewayRequest::CVV2, creditcard.verification_value)
+          request.Set(RocketGate::GatewayRequest::EXPIRE_MONTH, creditcard.month)
+          request.Set(RocketGate::GatewayRequest::EXPIRE_YEAR, creditcard.year)
+          request.Set(RocketGate::GatewayRequest::CUSTOMER_FIRSTNAME, creditcard.first_name)
+          request.Set(RocketGate::GatewayRequest::CUSTOMER_LASTNAME, creditcard.last_name)
+        end
+      end
 
 
 ######################################################################
@@ -406,20 +410,20 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_address(request, address)
-	  return if address.nil?
-	  request.Set(RocketGate::GatewayRequest::BILLING_ADDRESS, address[:address1])
-	  request.Set(RocketGate::GatewayRequest::BILLING_CITY, address[:city])
-	  request.Set(RocketGate::GatewayRequest::BILLING_ZIPCODE, address[:zip])
-	  request.Set(RocketGate::GatewayRequest::BILLING_COUNTRY, address[:country])
+      def add_address(request, address)
+        return if address.nil?
+        request.Set(RocketGate::GatewayRequest::BILLING_ADDRESS, address[:address1])
+        request.Set(RocketGate::GatewayRequest::BILLING_CITY, address[:city])
+        request.Set(RocketGate::GatewayRequest::BILLING_ZIPCODE, address[:zip])
+        request.Set(RocketGate::GatewayRequest::BILLING_COUNTRY, address[:country])
 
 #
 #	Only add the state if the country is the US or Canada.
 #	          
-          if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
-	    request.Set(RocketGate::GatewayRequest::BILLING_STATE, address[:state].upcase)
-          end
-	end
+        if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
+          request.Set(RocketGate::GatewayRequest::BILLING_STATE, address[:state].upcase)
+        end
+      end
 
 
 ######################################################################
@@ -430,11 +434,11 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_business_rules_data(request, options)
-	  request.Set(RocketGate::GatewayRequest::AVS_CHECK, convert_rule_flag(options[:ignore_avs]))
-	  request.Set(RocketGate::GatewayRequest::CVV2_CHECK, convert_rule_flag(options[:ignore_cvv]))
-	  request.Set(RocketGate::GatewayRequest::SCRUB, options[:scrub])
-	end
+      def add_business_rules_data(request, options)
+        request.Set(RocketGate::GatewayRequest::AVS_CHECK, convert_rule_flag(options[:ignore_avs]))
+        request.Set(RocketGate::GatewayRequest::CVV2_CHECK, convert_rule_flag(options[:ignore_cvv]))
+        request.Set(RocketGate::GatewayRequest::SCRUB, options[:scrub])
+      end
 
 
 ######################################################################
@@ -444,15 +448,15 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def convert_rule_flag(value)
-	  if value == 'ignore'
-	    return value
-	  end
-	  if value == 'IGNORE'
-	    return value
-	  end
-	  return (value) ? false : true
-	end
+      def convert_rule_flag(value)
+        if value == 'ignore'
+          return value
+        end
+        if value == 'IGNORE'
+          return value
+        end
+        return (value) ? false : true
+      end
 
 
 ######################################################################
@@ -465,13 +469,13 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 #
-	def add_recurring_data(request, options) 
-	  request.Set(RocketGate::GatewayRequest::REBILL_FREQUENCY, options[:rebill_frequency])
-	  request.Set(RocketGate::GatewayRequest::REBILL_AMOUNT, options[:rebill_amount]) 
-	  request.Set(RocketGate::GatewayRequest::REBILL_START, options[:rebill_start])
-	end
+      def add_recurring_data(request, options)
+        request.Set(RocketGate::GatewayRequest::REBILL_FREQUENCY, options[:rebill_frequency])
+        request.Set(RocketGate::GatewayRequest::REBILL_AMOUNT, options[:rebill_amount])
+        request.Set(RocketGate::GatewayRequest::REBILL_START, options[:rebill_start])
+      end
 
-     
+
 ######################################################################
 #
 #	create_response() - Create an active-merchant response
@@ -480,47 +484,47 @@ module ActiveMerchant #:nodoc:
 #
 ######################################################################
 
-	def create_response(response)
+      def create_response(response)
 
 #
 #	Setup default response values.
 #
-	  message = nil
-	  authorization = nil
-	  success = false
-	  exception = nil
+        message = nil
+        authorization = nil
+        success = false
+        exception = nil
 #
 #	Extract key elements from the response.
 #
-	  reasonCode = response.Get(RocketGate::GatewayResponse::REASON_CODE);
-	  message = @@response_codes[('r' + reasonCode).to_sym]  || "ERROR - " + reasonCode
-	  responseCode = response.Get(RocketGate::GatewayResponse::RESPONSE_CODE);
-	  if ((responseCode != nil) && (responseCode == "0"))
-	    success = true;			# Transaction succeeded
-	    authorization = response.Get(RocketGate::GatewayResponse::TRANSACT_ID);
-	  else 
-	    exception = response.Get(RocketGate::GatewayResponse::EXCEPTION);
-	  end
+        reasonCode = response.Get(RocketGate::GatewayResponse::REASON_CODE);
+        message = @@response_codes[('r' + reasonCode).to_sym] || "ERROR - " + reasonCode
+        responseCode = response.Get(RocketGate::GatewayResponse::RESPONSE_CODE);
+        if ((responseCode != nil) && (responseCode == "0"))
+          success = true; # Transaction succeeded
+          authorization = response.Get(RocketGate::GatewayResponse::TRANSACT_ID);
+        else
+          exception = response.Get(RocketGate::GatewayResponse::EXCEPTION);
+        end
 
 #
 #	Extract values that are not dependent up success/failure.
 #
-	  avsResponse = response.Get(RocketGate::GatewayResponse::AVS_RESPONSE)
-	  cvv2Response = response.Get(RocketGate::GatewayResponse::CVV2_CODE)
-	  fraudResponse = response.Get(RocketGate::GatewayResponse::SCRUB_RESULTS)
+        avsResponse = response.Get(RocketGate::GatewayResponse::AVS_RESPONSE)
+        cvv2Response = response.Get(RocketGate::GatewayResponse::CVV2_CODE)
+        fraudResponse = response.Get(RocketGate::GatewayResponse::SCRUB_RESULTS)
 
 #
 #	Create the response object.
 #
-	  card_hash = response.Get(RocketGate::GatewayResponse::CARD_HASH)
-	  Response.new(success, message, {:result => responseCode, :exception => exception, :card_hash => card_hash},
-		       :test => test?,
-		       :authorization => authorization,
-		       :avs_result => { :code => avsResponse },
-		       :cvv_result => cvv2Response,
-		       :fraud_review  => fraudResponse
-		      )
-	end
+        card_hash = response.Get(RocketGate::GatewayResponse::CARD_HASH)
+        Response.new(success, message, {:result => responseCode, :exception => exception, :card_hash => card_hash},
+                     :test => test?,
+                     :authorization => authorization,
+                     :avs_result => {:code => avsResponse},
+                     :cvv_result => cvv2Response,
+                     :fraud_review => fraudResponse
+        )
+      end
     end
   end
 end

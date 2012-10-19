@@ -56,15 +56,15 @@ module RocketGate
 ######################################################################
 #
     def initialize
-      @testMode = false				# Default to live
+      @testMode = false # Default to live
       @rocketGateDNS = LIVE_HOST
-      @rocketGateHost = [ LIVE_HOST_16, LIVE_HOST_17 ]
+      @rocketGateHost = [LIVE_HOST_16, LIVE_HOST_17]
       @rocketGateServlet = ROCKETGATE_SERVLET
       @rocketGateProtocol = ROCKETGATE_PROTOCOL
       @rocketGatePortNo = ROCKETGATE_PORTNO
       @rocketGateConnectTimeout = ROCKETGATE_CONNECT_TIMEOUT
       @rocketGateReadTimeout = ROCKETGATE_READ_TIMEOUT
-      super					# Call superclass
+      super # Call superclass
     end
 
 
@@ -75,13 +75,13 @@ module RocketGate
 ######################################################################
 #
     def SetTestMode(yesNo)
-      if yesNo					# Setting test mode?
-	@testMode = true;			# Set to test mode
-        @rocketGateHost = [ TEST_HOST ]		# Point to dev hosts
+      if yesNo # Setting test mode?
+        @testMode = true; # Set to test mode
+        @rocketGateHost = [TEST_HOST] # Point to dev hosts
         @rocketGateDNS = TEST_HOST
       else
-	@testMode = false;			# Set to live mode
-	@rocketGateHost = [ LIVE_HOST_16, LIVE_HOST_17 ]
+        @testMode = false; # Set to live mode
+        @rocketGateHost = [LIVE_HOST_16, LIVE_HOST_17]
         @rocketGateDNS = LIVE_HOST
       end
     end
@@ -94,7 +94,7 @@ module RocketGate
 ######################################################################
 #
     def SetHost(hostName)
-      @rocketGateHost = [ hostName ]		# Use this host
+      @rocketGateHost = [hostName] # Use this host
       @rocketGateDNS = hostName
     end
 
@@ -107,7 +107,7 @@ module RocketGate
 ######################################################################
 #
     def SetProtocol(protocol)
-      @rocketGateProtocol = protocol		# HTTP, HTTPS, etc
+      @rocketGateProtocol = protocol # HTTP, HTTPS, etc
     end
 
 
@@ -118,7 +118,7 @@ module RocketGate
 ######################################################################
 #
     def SetPortNo(portNo)
-      @rocketGatePortNo = portNo		# IP port
+      @rocketGatePortNo = portNo # IP port
     end
 
 
@@ -129,7 +129,7 @@ module RocketGate
 ######################################################################
 #
     def SetServlet(servlet)
-      @rocketGateServlet = servlet		# End point
+      @rocketGateServlet = servlet # End point
     end
 
 
@@ -140,7 +140,7 @@ module RocketGate
 ######################################################################
 #
     def SetConnectTimeout(timeout)
-      if (timeout.to_i > 0)			# Have a real value?
+      if (timeout.to_i > 0) # Have a real value?
         @rocketGateConnectTimeout = timeout.to_i
       end
     end
@@ -153,8 +153,8 @@ module RocketGate
 ######################################################################
 #
     def SetReadTimeout(timeout)
-      if (timeout.to_i > 0)			# Have a real value?
-        @rocketGateReadTimeout = timeout.to_i	# Number of seconds
+      if (timeout.to_i > 0) # Have a real value?
+        @rocketGateReadTimeout = timeout.to_i # Number of seconds
       end
     end
 
@@ -178,21 +178,21 @@ module RocketGate
 #	Determine the final servlet name.
 #
       if urlServlet == nil
-	urlServlet = @rocketGateServlet
+        urlServlet = @rocketGateServlet
       end
 
 #
 #	Determine the final protocol.
 #
       if urlProtocol == nil
-	urlProtocol = @rocketGateProtocol
+        urlProtocol = @rocketGateProtocol
       end
 
 #
 #	Determine the final port number.
 #
       if urlPortNo == nil
-	urlPortNo = @rocketGatePortNo
+        urlPortNo = @rocketGatePortNo
       end
 
 #
@@ -200,7 +200,7 @@ module RocketGate
 #
       connectTimeout = request.Get("gatewayConnectTimeout")
       if ((connectTimeout == nil) || (connectTimeout.to_i <= 0))
-	connectTimeout = @rocketGateConnectTimeout
+        connectTimeout = @rocketGateConnectTimeout
       end
 
 #
@@ -208,79 +208,79 @@ module RocketGate
 #
       readTimeout = request.Get("gatewayReadTimeout")
       if ((readTimeout == nil) || (readTimeout.to_i <= 0))
-	readTimeout = @rocketGateReadTimeout
+        readTimeout = @rocketGateReadTimeout
       end
 
 #
 #	Prepare the values that will go into post
 #
       begin
-	response.Reset				# Clear any response data
-	requestXML = request.ToXML		# Get message string
-	headers = { 'Content-Type' => 'text/xml', 'User-Agent' => ROCKETGATE_USER_AGENT }
+        response.Reset # Clear any response data
+        requestXML = request.ToXML # Get message string
+        headers = {'Content-Type' => 'text/xml', 'User-Agent' => ROCKETGATE_USER_AGENT}
 
 #
 #	Create the HTTP handler for the post.
 #
-	http = Net::HTTP.new(serverName, urlPortNo)
-	http.open_timeout = connectTimeout	# Setup connection timeout
-	http.read_timeout = readTimeout		# Setup operation timeout
+        http = Net::HTTP.new(serverName, urlPortNo)
+        http.open_timeout = connectTimeout # Setup connection timeout
+        http.read_timeout = readTimeout # Setup operation timeout
 
 #
 #	If we are doing HTTPS, we need to setup SSL.
 #
-	urlProtocol = urlProtocol.upcase	# Change to caps
-	if (urlProtocol == "HTTPS")		# Need HTTPS?
-	  http.use_ssl = true			# Required SSL
-	  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-	end
+        urlProtocol = urlProtocol.upcase # Change to caps
+        if (urlProtocol == "HTTPS") # Need HTTPS?
+          http.use_ssl = true # Required SSL
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        end
 
 #
 #	Perform the posting.
 #
-	results = http.request_post(urlServlet, requestXML, headers)
-	body = results.body			# Get the response data
+        results = http.request_post(urlServlet, requestXML, headers)
+        body = results.body # Get the response data
 
 #
 #	Check if we were unable to connect.
 #
       rescue Errno::ECONNREFUSED => ex
-	response.Set(GatewayResponse::EXCEPTION, ex.message)
-	response.Set(GatewayResponse::RESPONSE_CODE, "3")
-	response.Set(GatewayResponse::REASON_CODE, "301")
-	return "3"				# System error
+        response.Set(GatewayResponse::EXCEPTION, ex.message)
+        response.Set(GatewayResponse::RESPONSE_CODE, "3")
+        response.Set(GatewayResponse::REASON_CODE, "301")
+        return "3" # System error
 
 #
 #	Check if there was some type of timeout.
 #
       rescue Timeout::Error => ex
-	response.Set(GatewayResponse::EXCEPTION, ex.message)
-	response.Set(GatewayResponse::RESPONSE_CODE, "3")
-	response.Set(GatewayResponse::REASON_CODE, "303")
-	return "3"				# System error
+        response.Set(GatewayResponse::EXCEPTION, ex.message)
+        response.Set(GatewayResponse::RESPONSE_CODE, "3")
+        response.Set(GatewayResponse::REASON_CODE, "303")
+        return "3" # System error
 
 #
 #	Catch all other errors.
 #
-      rescue => ex				# Default handler
-	response.Set(GatewayResponse::EXCEPTION, ex.message)
-	response.Set(GatewayResponse::RESPONSE_CODE, "3")
-	response.Set(GatewayResponse::REASON_CODE, "304")
-	return "3"				# System error
+      rescue => ex # Default handler
+        response.Set(GatewayResponse::EXCEPTION, ex.message)
+        response.Set(GatewayResponse::RESPONSE_CODE, "3")
+        response.Set(GatewayResponse::REASON_CODE, "304")
+        return "3" # System error
       end
 
 #
 #	Parse the response XML and return the response code.
 #
-      response.SetFromXML(body)			# Set from response body
+      response.SetFromXML(body) # Set from response body
       responseCode = response.Get(GatewayResponse::RESPONSE_CODE)
-      if (responseCode == nil)			# Don't have one?
-	responseCode = "3"			# System error
-	response.Set(GatewayResponse::EXCEPTION, body)
+      if (responseCode == nil) # Don't have one?
+        responseCode = "3" # System error
+        response.Set(GatewayResponse::EXCEPTION, body)
         response.Set(GatewayResponse::RESPONSE_CODE, "3")
-        response.Set(GatewayResponse::REASON_CODE, "400") 
+        response.Set(GatewayResponse::REASON_CODE, "400")
       end
-      return responseCode			# Give back results
+      return responseCode # Give back results
     end
 
 
@@ -297,11 +297,11 @@ module RocketGate
 #	If the request specifies a server name, use it.
 #	Otherwise, use the default.
 #
-      serverName = request.Get("gatewayServer")	# Get server name
-      if (serverName != nil)			# Override?
-	serverName = [ serverName ]		# Use this name
+      serverName = request.Get("gatewayServer") # Get server name
+      if (serverName != nil) # Override?
+        serverName = [serverName] # Use this name
       else
-        serverName = @rocketGateHost		# Use default list
+        serverName = @rocketGateHost # Use default list
       end
 
 #
@@ -315,13 +315,13 @@ module RocketGate
 #
 #	Randomly pick an endpoint.
 #
-      if (serverName.length > 1)		# Have multiples?
-	index = rand(serverName.length)		# Pick random server
-	if (index > 0)				# Want to change?
-	  swapper = serverName[0]		# Save the first one
-	  serverName[0] = serverName[index]	# Move to first
-	  serverName[index] = swapper		# And swap
-	end
+      if (serverName.length > 1) # Have multiples?
+        index = rand(serverName.length) # Pick random server
+        if (index > 0) # Want to change?
+          swapper = serverName[0] # Save the first one
+          serverName[0] = serverName[index] # Move to first
+          serverName[index] = swapper # And swap
+        end
       end
 
 #
@@ -329,36 +329,36 @@ module RocketGate
 #	to each host in the list until it succeeds or fails
 #	due to an unrecoverable error.
 #
-      index = 0					# Start at first position
-      while index < serverName.length do	# Loop over list
-	results = self.SendTransaction(serverName[index], request, response)
+      index = 0 # Start at first position
+      while index < serverName.length do # Loop over list
+        results = self.SendTransaction(serverName[index], request, response)
 
 #
 #	If the transaction was successful, we are done
 #
-	if results == "0"			# Success?
-	  return true				# All done
-	end 
+        if results == "0" # Success?
+          return true # All done
+        end
 
 #
 #	If the transaction is not recoverable, quit.
 #
-	if results != "3"			# Unrecoverable?
-	  return false				# All done
-	end 
+        if results != "3" # Unrecoverable?
+          return false # All done
+        end
 
 #
 #	Save any errors in the response so they can be
 # 	transmitted along with the next request.
 #
-	request.Set(GatewayRequest::FAILED_SERVER, serverName[index]);
-	request.Set(GatewayRequest::FAILED_RESPONSE_CODE,
+        request.Set(GatewayRequest::FAILED_SERVER, serverName[index]);
+        request.Set(GatewayRequest::FAILED_RESPONSE_CODE,
                     response.Get(GatewayResponse::RESPONSE_CODE));
-	request.Set(GatewayRequest::FAILED_REASON_CODE,
+        request.Set(GatewayRequest::FAILED_REASON_CODE,
                     response.Get(GatewayResponse::REASON_CODE));
-	request.Set(GatewayRequest::FAILED_GUID,
+        request.Set(GatewayRequest::FAILED_GUID,
                     response.Get(GatewayResponse::TRANSACT_ID));
-	index = index + 1			# Next index
+        index = index + 1 # Next index
       end
     end
 
@@ -386,32 +386,32 @@ module RocketGate
 #	reference transaction.
 #
       referenceGUID = request.Get(GatewayRequest::REFERENCE_GUID)
-      if (referenceGUID == nil)			# Don't have reference?
-	response.Set(GatewayResponse::RESPONSE_CODE, "4")
-	response.Set(GatewayResponse::REASON_CODE, "410")
-	return false				# And quit
+      if (referenceGUID == nil) # Don't have reference?
+        response.Set(GatewayResponse::RESPONSE_CODE, "4")
+        response.Set(GatewayResponse::REASON_CODE, "410")
+        return false # And quit
       end
 
 #
 #	Strip off the bits that indicate which server should
 #	be used.
 #
-      siteString = "0x"				# Value is hex
-      if (referenceGUID.length > 15)		# Server 16 and above?
-	siteString.concat(referenceGUID[0,2])	# Get first two digits
+      siteString = "0x" # Value is hex
+      if (referenceGUID.length > 15) # Server 16 and above?
+        siteString.concat(referenceGUID[0, 2]) # Get first two digits
       else
-	siteString.concat(referenceGUID[0,1])	# Get first digit only
+        siteString.concat(referenceGUID[0, 1]) # Get first digit only
       end
 
 #
 #	Try to turn the site string into a number.
 #
       begin
-        siteNo = Integer(siteString)		# Convert to site number
+        siteNo = Integer(siteString) # Convert to site number
       rescue
-	response.Set(GatewayResponse::RESPONSE_CODE, "4")
-	response.Set(GatewayResponse::REASON_CODE, "410")
-	return false				# And quit
+        response.Set(GatewayResponse::RESPONSE_CODE, "4")
+        response.Set(GatewayResponse::REASON_CODE, "410")
+        return false # And quit
       end
 
 #
@@ -419,26 +419,26 @@ module RocketGate
 #	be directed.
 #
       serverName = request.Get("gatewayServer") # Get server name
-      if (serverName == nil)			# Don't have one?
-	serverName = @rocketGateDNS		# Start with default
-	separator = serverName.index(".")	# Find first .
-	if ((separator != nil) && (separator > 0))
-	  prefix = serverName[0, separator]	# Get the prefix
-	  prefix.concat("-")			# Add separator
-	  prefix.concat(siteNo.to_s)		# Add site number
-	  prefix.concat(serverName[separator, serverName.length])
-	  serverName = prefix			# Full server name
-	end
+      if (serverName == nil) # Don't have one?
+        serverName = @rocketGateDNS # Start with default
+        separator = serverName.index(".") # Find first .
+        if ((separator != nil) && (separator > 0))
+          prefix = serverName[0, separator] # Get the prefix
+          prefix.concat("-") # Add separator
+          prefix.concat(siteNo.to_s) # Add site number
+          prefix.concat(serverName[separator, serverName.length])
+          serverName = prefix # Full server name
+        end
       end
 
 #
 #	Send the transaction to the specified host.
 #
       results = self.SendTransaction(serverName, request, response)
-      if results == "0"				# Success?
-	return true				# All done
+      if results == "0" # Success?
+        return true # All done
       end
-      return false				# Failed
+      return false # Failed
     end
 
 
@@ -457,35 +457,35 @@ module RocketGate
 #	confirmation message.
 #
       confirmGUID = response.Get(GatewayResponse::TRANSACT_ID)
-      if (confirmGUID == nil)			# Don't have reference?
-	response.Set(GatewayResponse::EXCEPTION,
-		     "BUG-CHECK - Missing confirmation GUID")
-	response.Set(GatewayResponse::RESPONSE_CODE, "3")
-	response.Set(GatewayResponse::REASON_CODE, "307")
-	return false				# And quit
+      if (confirmGUID == nil) # Don't have reference?
+        response.Set(GatewayResponse::EXCEPTION,
+                     "BUG-CHECK - Missing confirmation GUID")
+        response.Set(GatewayResponse::RESPONSE_CODE, "3")
+        response.Set(GatewayResponse::REASON_CODE, "307")
+        return false # And quit
       end
 
 #
 #	Add the GUID to the request and send it back to the
 #	original server for confirmation.
 #
-      confirmResponse = GatewayResponse.new	# Need a new response object
+      confirmResponse = GatewayResponse.new # Need a new response object
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CC_CONFIRM")
       request.Set(GatewayRequest::REFERENCE_GUID, confirmGUID)
       results = self.PerformTargetedTransaction(request, confirmResponse)
-      if (results)				# Success?
-	return true				# Yes - We are done
+      if (results) # Success?
+        return true # Yes - We are done
       end
 
 #
 #	If the confirmation failed, copy the reason and response code
 #	into the original response object to override the success.
 #
-      response.Set(GatewayResponse::RESPONSE_CODE, 
-			confirmResponse.Get(GatewayResponse::RESPONSE_CODE))
-      response.Set(GatewayResponse::REASON_CODE, 
-			confirmResponse.Get(GatewayResponse::REASON_CODE))
-      return false				# And quit
+      response.Set(GatewayResponse::RESPONSE_CODE,
+                   confirmResponse.Get(GatewayResponse::RESPONSE_CODE))
+      response.Set(GatewayResponse::REASON_CODE,
+                   confirmResponse.Get(GatewayResponse::REASON_CODE))
+      return false # And quit
     end
 
 
@@ -498,10 +498,10 @@ module RocketGate
     def PerformAuthOnly(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CC_AUTH");
       results = self.PerformTransaction(request, response)
-      if results				# Success?
-	results = self.PerformConfirmation(request, response)
+      if results # Success?
+        results = self.PerformConfirmation(request, response)
       end
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -515,7 +515,7 @@ module RocketGate
     def PerformTicket(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CC_TICKET");
       results = self.PerformTargetedTransaction(request, response)
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -528,10 +528,10 @@ module RocketGate
     def PerformPurchase(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CC_PURCHASE");
       results = self.PerformTransaction(request, response)
-      if results				# Success?
-	results = self.PerformConfirmation(request, response)
+      if results # Success?
+        results = self.PerformConfirmation(request, response)
       end
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -551,12 +551,12 @@ module RocketGate
 #	transaction distribution.
 #
       referenceGUID = request.Get(GatewayRequest::REFERENCE_GUID)
-      if (referenceGUID != nil)			# Have reference?
+      if (referenceGUID != nil) # Have reference?
         results = self.PerformTargetedTransaction(request, response)
       else
         results = self.PerformTransaction(request, response)
       end
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -570,7 +570,7 @@ module RocketGate
     def PerformVoid(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CC_VOID");
       results = self.PerformTargetedTransaction(request, response)
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -583,7 +583,7 @@ module RocketGate
     def PerformCardScrub(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "CARDSCRUB");
       results = self.PerformTransaction(request, response)
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -596,7 +596,7 @@ module RocketGate
     def PerformRebillCancel(request, response)
       request.Set(GatewayRequest::TRANSACTION_TYPE, "REBILL_CANCEL");
       results = self.PerformTransaction(request, response)
-      return results				# Return results
+      return results # Return results
     end
 
 
@@ -615,7 +615,7 @@ module RocketGate
       amount = request.Get(GatewayRequest::AMOUNT)
       if ((amount == nil) || (amount.to_f <= 0.0))
         results = self.PerformTransaction(request, response)
-        return results				# Return results
+        return results # Return results
       end
 
 #
@@ -623,10 +623,10 @@ module RocketGate
 #	the charge.
 #
       results = self.PerformTransaction(request, response)
-      if results				# Success?
-	results = self.PerformConfirmation(request, response)
+      if results # Success?
+        results = self.PerformConfirmation(request, response)
       end
-      return results				# Return results
+      return results # Return results
     end
   end
 end
