@@ -269,6 +269,8 @@ module ActiveMerchant #:nodoc:
         return create_response(response)
       end
 
+      alias_method :refund, :credit
+
 
 ######################################################################
 #
