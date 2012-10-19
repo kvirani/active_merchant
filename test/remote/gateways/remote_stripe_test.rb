@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'json'
-
 require 'test_helper'
 
 class RemoteStripeTest < Test::Unit::TestCase
@@ -41,14 +38,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Your card number is invalid', response.message
-  end
-
-  def test_authorize
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
-  def test_capture
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
   end
 
   def test_successful_void

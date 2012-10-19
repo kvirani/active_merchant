@@ -64,10 +64,11 @@ module ActiveMerchant #:nodoc:
     class UsaEpayAdvancedGateway < Gateway
       API_VERSION = "1.4"
       
-      class_attribute :test_url, :live_url
-
       TEST_URL_BASE = 'https://sandbox.usaepay.com/soap/gate/' #:nodoc:
       LIVE_URL_BASE = 'https://www.usaepay.com/soap/gate/' #:nodoc:
+
+      self.test_url = TEST_URL_BASE
+      self.live_url = LIVE_URL_BASE
 
       FAILURE_MESSAGE = "Default Failure" #:nodoc:
       
@@ -1239,7 +1240,7 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
           build_tag soap, :string, 'CardExpiration', 
-            "#{payment_method[:method].year}-#{"%02d" % payment_method[:method].month}"
+            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1319,7 +1320,7 @@ module ActiveMerchant #:nodoc:
         soap.CreditCardData 'xsi:type' => "ns1:CreditCardData" do |soap|
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
           build_tag soap, :string, 'CardExpiration', 
-            "#{options[:payment_method].year}-#{"%02d" % options[:payment_method].month}"
+            "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]

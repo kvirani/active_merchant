@@ -1,29 +1,19 @@
 require 'test_helper'
 
-# Note:
-# to successfully run the echeck test cases, your cybersource test account must be set up
-# with one of cybersource's check processors; these cases pass against Paymenttech
-
 class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
+
     @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
 
-    @credit_card = credit_card('4111111111111111', :type => 'visa')
-    @declined_card = credit_card('801111111111111', :type => 'visa')
-    
+    @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('801111111111111')
+
     @amount = 100
-    
+
     @options = {
-      :billing_address => address.merge({
-        :first_name => 'Jim',
-        :last_name => 'Smith',
-        :address1 => "1295 Charleston Rd.",
-        :city =>"Mountain View",
-        :state => "CA",
-        :zip => "94043",
-        :country => "US"
-        }),
+      :billing_address => address,
+
       :order_id => generate_unique_id,
       :line_items => [
         {
@@ -39,7 +29,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
           :description => 'Marble Snowcone',
           :sku => 'FAKE1232132113123'
         }
-      ],  
+      ],
       :currency => 'USD',
       :email => 'someguy1232@fakeemail.net',
       :ignore_avs => 'true',
@@ -50,7 +40,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :email => 'someguy1232@fakeemail.net',
       :credit_card => @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+      :billing_address => address,
       :subscription => {
         :frequency => "weekly",
         :start_date => Date.today.next_week,
@@ -59,28 +49,23 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         :amount => 100
       }
     }
-
-    @check = ActiveMerchant::Billing::Check.new(
-      :name => 'Mr CustomerTwo',
-      :routing_number => '121042882', # Valid ABA # - Bank of America, TX
-      :account_number => '4100',
-      :account_holder_type => 'personal',
-      :account_type => 'checking'
-    )
-
-    check_fields = {
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'CustomerTwo', :phone_number => "123-456-7890"),
-      :drivers_license_number => "C2222222",
-      :drivers_license_state  => "CA"
-    }
-
-    @check_options = @options.merge(check_fields)
-
-    @check_subscription_options = @subscription_options.merge(check_fields)
   end
-  
+
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_subscription_authorization
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.authorize(@amount, response.authorization, :order_id => generate_unique_id)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -117,7 +102,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_tax_calculation
-    assert response = @gateway.calculate_tax(@options)
+    assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
     assert_not_equal "0", response.params['totalTaxAmount']
@@ -126,24 +111,45 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_tax_calculation_with_nexus
-    assert response = @gateway.calculate_tax(@options.merge(:nexus => 'CA'))
+    total_line_items_value = @options[:line_items].inject(0) do |sum, item|
+                               sum += item[:declared_value] * item[:quantity]
+                             end
+
+    canada_gst_rate = 0.05
+    ontario_pst_rate = 0.08
+
+
+    total_pst = total_line_items_value.to_f * ontario_pst_rate / 100
+    total_gst = total_line_items_value.to_f * canada_gst_rate / 100
+    total_tax = total_pst + total_gst
+
+    assert response = @gateway.calculate_tax(@credit_card, @options.merge(:nexus => 'ON'))
     assert_equal 'Successful transaction', response.message
-    assert response.params['totalTaxAmount'].to_f > 0
+    assert response.params['totalTaxAmount']
+    assert_equal total_pst, response.params['totalCountyTaxAmount'].to_f
+    assert_equal total_gst, response.params['totalStateTaxAmount'].to_f
+    assert_equal total_tax, response.params['totalTaxAmount'].to_f
     assert_success response
     assert response.test?
   end
 
-  def test_successful_purchase_with_cc
+  def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
   end
 
-  def test_successful_purchase_with_echeck
-    assert response = @gateway.purchase(@amount, @check, @check_options)
+  def test_successful_subscription_purchase
+    assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response
+    assert response.test?
+
+    assert response = @gateway.purchase(@amount, response.authorization, :order_id => generate_unique_id)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
   end
 
   def test_unsuccessful_purchase
@@ -157,11 +163,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Successful transaction', auth.message
-  
+
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
-  
+
   def test_successful_authorization_and_failed_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -184,9 +190,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options)
     end
     assert response = authentication_exception.response
-    assert_match /wsse:InvalidSecurity/, response.body
+    assert_match(/wsse:InvalidSecurity/, response.body)
   end
-  
+
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
@@ -195,61 +201,43 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, response.authorization)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert response.test?       
+    assert response.test?
   end
 
-  def test_successful_create_subscription_with_cc
+  def test_successful_create_subscription
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
   end
 
-  def test_successful_create_subscription_with_cc_and_setup_fee
+  def test_successful_create_subscription_with_setup_fee
     assert response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 100))
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
   end
 
-  def test_successful_create_subscription_with_echeck
-    assert response = @gateway.store(@check, @check_subscription_options)
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-  end
-
-  def test_successful_update_subscription
+  def test_successful_update_subscription_creditcard
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
 
-    assert response = @gateway.store(response.authorization, {:order_id =>generate_unique_id,:credit_card => @credit_card, :setup_fee => 100})
+    assert response = @gateway.update(response.authorization, @credit_card, {:order_id => generate_unique_id, :setup_fee => 100})
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
   end
 
-  def test_successful_purchase_with_cc_subscription
+  def test_successful_update_subscription_billing_address
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
 
-    assert response = @gateway.purchase(@amount, response.authorization, @options.merge(:type => :credit_card))
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-  end
-
-  def test_successful_purchase_with_echeck_subscription
-    assert response = @gateway.store(@check, @check_subscription_options)
-    assert_equal 'Successful transaction', response.message
-    assert_success response
-    assert response.test?
-
-    assert response = @gateway.purchase(@amount, response.authorization, @options.merge(:type => :check))
+    assert response = @gateway.update(response.authorization, nil,
+      {:order_id => generate_unique_id, :setup_fee => 100, billing_address: address, email: 'someguy1232@fakeemail.net'})
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -264,4 +252,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
   end
+
+  def test_successful_retrieve_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+
+    assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
+    assert response.success?
+    assert response.test?
+  end
+
 end

@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     class UsaEpayTransactionGateway < Gateway
     	URL = 'https://www.usaepay.com/gate.php'
       TEST_URL = 'https://sandbox.usaepay.com/gate.php'
-      
+
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.usaepay.com/'
@@ -65,6 +65,10 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = { :refNum => authorization }
         commit(:void, post)
+      end
+
+      def test?
+        @options[:test] || super
       end
 
       private
@@ -134,6 +138,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:invoice] = options[:order_id]
+        post[:description] = options[:description]
       end
 
       def add_credit_card(post, credit_card)
@@ -168,7 +173,6 @@ module ActiveMerchant #:nodoc:
         }.delete_if{|k, v| v.nil?}
       end
 
-
       def commit(action, parameters)
         url = @options[:server] == :sandbox ? TEST_URL : URL
         response = parse( ssl_post(url, post_data(action, parameters)) )
@@ -194,7 +198,7 @@ module ActiveMerchant #:nodoc:
         parameters[:command]  = TRANSACTIONS[action]
         parameters[:key] = @options[:login]
         parameters[:software] = 'Active Merchant'
-        parameters[:testmode] = @options[:test] ? 1 : 0
+        parameters[:testmode] = (@options[:test] ? 1 : 0)
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
